@@ -1,56 +1,117 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { NavigationTheme } from '@/constants/Colors';
+import { ThemeProvider } from '@react-navigation/native';
+import { useOnboardingStore } from '@/stores/useOnboardingStore';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+const HEADER_STYLE = { backgroundColor: '#000' };
+const HEADER_TINT = '#FFD700';
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const { hasSeenOnboarding, isLoaded, loadOnboardingState } =
+    useOnboardingStore();
+  const router = useRouter();
+  const segments = useSegments();
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+  useEffect(() => {
+    loadOnboardingState();
+  }, [loadOnboardingState]);
+
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && isLoaded) {
       SplashScreen.hideAsync();
-    }
-  }, [loaded]);
 
-  if (!loaded) {
+      // Redirect to onboarding if first time
+      if (!hasSeenOnboarding && segments[0] !== 'onboarding') {
+        router.replace('/onboarding');
+      }
+    }
+  }, [loaded, isLoaded, hasSeenOnboarding, segments, router]);
+
+  if (!loaded || !isLoaded) {
     return null;
   }
 
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={NavigationTheme}>
+      <StatusBar style="light" />
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen
+          name="onboarding"
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="read/camera"
+          options={{
+            title: '書類を撮影',
+            headerStyle: HEADER_STYLE,
+            headerTintColor: HEADER_TINT,
+            presentation: 'fullScreenModal',
+          }}
+        />
+        <Stack.Screen
+          name="read/result"
+          options={{
+            title: '読み取り結果',
+            headerStyle: HEADER_STYLE,
+            headerTintColor: HEADER_TINT,
+          }}
+        />
+        <Stack.Screen
+          name="read/history"
+          options={{
+            title: '読み取り履歴',
+            headerStyle: HEADER_STYLE,
+            headerTintColor: HEADER_TINT,
+          }}
+        />
+        <Stack.Screen
+          name="see/camera"
+          options={{
+            title: '周囲を撮影',
+            headerStyle: HEADER_STYLE,
+            headerTintColor: HEADER_TINT,
+            presentation: 'fullScreenModal',
+          }}
+        />
+        <Stack.Screen
+          name="see/result"
+          options={{
+            title: '周囲の説明',
+            headerStyle: HEADER_STYLE,
+            headerTintColor: HEADER_TINT,
+          }}
+        />
+        <Stack.Screen
+          name="settings"
+          options={{
+            title: '設定',
+            headerStyle: HEADER_STYLE,
+            headerTintColor: HEADER_TINT,
+            presentation: 'modal',
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );

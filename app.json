@@ -1,27 +1,36 @@
 {
   "expo": {
-    "name": "yomitomo",
+    "name": "読み友 Yomitomo",
     "slug": "yomitomo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "yomitomo",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yomitomo.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "カメラで書類や周囲の環境を撮影し、AIが内容を読み上げます。",
+        "NSLocationWhenInUseUsageDescription": "盲道マップで現在地を表示し、ナビゲーションに使用します。",
+        "NSSpeechRecognitionUsageDescription": "音声コマンドでアプリを操作するために使用します。",
+        "NSMicrophoneUsageDescription": "音声コマンドの認識に使用します。",
+        "UIAccessibilityElement": true
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#000000",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "package": "com.yomitomo.app",
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -30,7 +39,13 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "カメラで書類や周囲の環境を撮影し、AIが内容を読み上げます。"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
