@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>読み友 Yomitomo — 視覚障害者のためのAI情報アシスタント</title>
+  <meta name="description" content="書類を撮影するだけで、AIが内容を読み上げ。日本初の点字ブロック・デジタルマップ搭載。視覚障害者の情報アクセスを変える。">
+  <meta property="og:title" content="読み友 Yomitomo">
+  <meta property="og:description" content="AI-powered information assistant for visually impaired people in Japan">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000;
+      --surface: #1A1A1A;
+      --primary: #FFD700;
+      --text: #FFFFFF;
+      --text-secondary: #B0B0B0;
+      --danger: #FF6B6B;
+      --success: #4ADE80;
+      --max-width: 960px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 50% 50%, rgba(255,215,0,0.06) 0%, transparent 50%);
+      animation: pulse 8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 1; }
+    }
+
+    .hero-content { position: relative; z-index: 1; }
+
+    .hero-icon {
+      font-size: 5rem;
+      margin-bottom: 1.5rem;
+      display: block;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-bottom: 2.5rem;
+      max-width: 600px;
+    }
+
+    .hero-stat {
+      display: inline-flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 3rem;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--primary);
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: var(--primary);
+      color: var(--bg);
+      font-size: 1.2rem;
+      font-weight: 700;
+      padding: 1rem 2.5rem;
+      border-radius: 16px;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255,215,0,0.3);
+    }
+
+    .cta-secondary {
+      display: inline-block;
+      color: var(--primary);
+      font-size: 1rem;
+      margin-left: 1.5rem;
+      text-decoration: none;
+      border-bottom: 1px solid var(--primary);
+      padding-bottom: 2px;
+    }
+
+    /* Problem */
+    .section {
+      padding: 5rem 2rem;
+      max-width: var(--max-width);
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .section h2 {
+      font-size: 2.2rem;
+      font-weight: 900;
+      margin-bottom: 1.5rem;
+      line-height: 1.3;
+    }
+
+    .section p {
+      color: var(--text-secondary);
+      font-size: 1.05rem;
+      max-width: 700px;
+    }
+
+    /* Problem cards */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+
+    .problem-card {
+      background: var(--surface);
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 2rem;
+    }
+
+    .problem-card .number {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--danger);
+    }
+
+    .problem-card .label {
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    /* Features */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid #333;
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .feature-card h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--primary);
+    }
+
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    .feature-tag {
+      display: inline-block;
+      background: rgba(255,215,0,0.12);
+      color: var(--primary);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      margin-top: 1rem;
+    }
+
+    /* Tech */
+    .tech-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+
+    .tech-badge {
+      background: var(--surface);
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    /* A11y section */
+    .a11y-principles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+
+    .a11y-item {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border-left: 3px solid var(--primary);
+    }
+
+    .a11y-item strong {
+      display: block;
+      margin-bottom: 0.25rem;
+      color: var(--primary);
+    }
+
+    .a11y-item span {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Data section */
+    .data-table {
+      width: 100%;
+      margin-top: 2rem;
+      border-collapse: collapse;
+    }
+
+    .data-table th, .data-table td {
+      text-align: left;
+      padding: 1rem;
+      border-bottom: 1px solid #333;
+    }
+
+    .data-table th {
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .data-table td {
+      color: var(--text-secondary);
+    }
+
+    .data-highlight {
+      color: var(--primary) !important;
+      font-weight: 700;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 3rem 2rem;
+      border-top: 1px solid #222;
+      margin-top: 3rem;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .footer-links a:hover { color: var(--primary); }
+
+    .footer-copy {
+      color: #555;
+      font-size: 0.8rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 2.2rem; }
+      .hero-stat { gap: 1rem; }
+      .stat-number { font-size: 1.8rem; }
+      .section h2 { font-size: 1.6rem; }
+      .cta-secondary { display: block; margin: 1rem 0 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <section class="hero" role="banner">
+    <div class="hero-content">
+      <span class="hero-icon" aria-hidden="true">📖</span>
+      <h1>読み友</h1>
+      <p class="hero-subtitle">
+        書類を撮影するだけで、AIが内容を読み上げ。<br>
+        視覚障害者の情報アクセスを変える、AI情報アシスタント。
+      </p>
+
+      <div class="hero-stat" role="list" aria-label="主要な数値">
+        <div class="stat-item" role="listitem">
+          <span class="stat-number">83%</span>
+          <span class="stat-label">が情報取得に困難</span>
+        </div>
+        <div class="stat-item" role="listitem">
+          <span class="stat-number">31万人</span>
+          <span class="stat-label">日本の視覚障害者</span>
+        </div>
+        <div class="stat-item" role="listitem">
+          <span class="stat-number">10%</span>
+          <span class="stat-label">しか点字を読めない</span>
+        </div>
+      </div>
+
+      <div>
+        <a href="https://github.com/Jada-Q/yomitomo" class="cta-button" aria-label="GitHubでソースコードを見る">
+          GitHub
+        </a>
+        <a href="#features" class="cta-secondary">機能を見る</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem -->
+  <section class="section" aria-labelledby="problem-heading">
+    <span class="section-label">課題</span>
+    <h2 id="problem-heading">情報のバリアフリーは、まだ遠い</h2>
+    <p>
+      日本は1967年に点字ブロックを発明した国。しかし2026年の今、
+      視覚障害者が直面する最大の課題は「歩くこと」ではなく「読むこと」です。
+    </p>
+
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="number">83%</div>
+        <div class="label">の視覚障害者が情報アクセスに困難を感じている（JVIF調査 2022年）</div>
+      </div>
+      <div class="problem-card">
+        <div class="number">40%</div>
+        <div class="label">がほとんど外出しない。他の障害種別より高い割合</div>
+      </div>
+      <div class="problem-card">
+        <div class="number">90%</div>
+        <div class="label">は点字が読めない。「点字があるから大丈夫」は誤解</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section" id="features" aria-labelledby="features-heading">
+    <span class="section-label">機能</span>
+    <h2 id="features-heading">3つの機能で、情報をアクセシブルに</h2>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon" aria-hidden="true">📄</span>
+        <h3>書類読み取り</h3>
+        <p>
+          請求書、薬の説明書、メニュー。カメラで撮影するだけで、
+          AIが内容を理解し、自然な日本語で読み上げます。
+          単なるOCRではなく、「東京電力の請求書、4,320円、3月30日まで」と文脈を伝えます。
+        </p>
+        <span class="feature-tag">MVP</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon" aria-hidden="true">👁</span>
+        <h3>周囲説明</h3>
+        <p>
+          カメラを向けるだけで、AIが周囲の状況を説明。
+          段差、障害物、工事中などの安全情報を最優先でお伝えします。
+          看板や標識の文字も読み取ります。
+        </p>
+        <span class="feature-tag">V1</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon" aria-hidden="true">🗺</span>
+        <h3>盲道マップ</h3>
+        <p>
+          日本初の点字ブロック・デジタルマップ。
+          OpenStreetMapデータ + ユーザー報告で、
+          盲道の位置を可視化。発明国なのにデジタル化されていない現状を変えます。
+        </p>
+        <span class="feature-tag">V1</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Accessibility -->
+  <section class="section" aria-labelledby="a11y-heading">
+    <span class="section-label">アクセシビリティ</span>
+    <h2 id="a11y-heading">VoiceOver First で設計</h2>
+    <p>
+      すべてのUI要素がVoiceOverに完全対応。
+      画面を見なくても、すべての機能を音声で操作できます。
+    </p>
+
+    <div class="a11y-principles">
+      <div class="a11y-item">
+        <strong>48pt タッチターゲット</strong>
+        <span>Apple基準(44pt)を超える大きさ</span>
+      </div>
+      <div class="a11y-item">
+        <strong>WCAG AAA</strong>
+        <span>7:1以上のコントラスト比</span>
+      </div>
+      <div class="a11y-item">
+        <strong>音声ファースト</strong>
+        <span>VoiceOver ON/OFF 両方に最適化</span>
+      </div>
+      <div class="a11y-item">
+        <strong>フォーカス管理</strong>
+        <span>画面遷移時に自動フォーカス移動</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Data -->
+  <section class="section" aria-labelledby="data-heading">
+    <span class="section-label">データ</span>
+    <h2 id="data-heading">盲道データの空白を埋める</h2>
+    <p>
+      日本は点字ブロックの発明国であり、世界で最も普及しています。
+      しかしデジタルマップ上のデータは驚くほど少ない。
+    </p>
+
+    <table class="data-table" role="table" aria-label="盲道データの国際比較">
+      <thead>
+        <tr>
+          <th>地域</th>
+          <th>登録データ数</th>
+          <th>備考</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="data-highlight">日本</td>
+          <td class="data-highlight">45,239</td>
+          <td>発明国なのにデータ不足</td>
+        </tr>
+        <tr>
+          <td>ドイツ</td>
+          <td>217,626</td>
+          <td>日本の4.8倍</td>
+        </tr>
+        <tr>
+          <td>全世界</td>
+          <td>2,596,373</td>
+          <td>日本は1.7%のみ</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Tech -->
+  <section class="section" aria-labelledby="tech-heading">
+    <span class="section-label">技術スタック</span>
+    <h2 id="tech-heading">モダンな技術で、確かな体験を</h2>
+
+    <div class="tech-grid" role="list">
+      <span class="tech-badge" role="listitem">Expo SDK 55</span>
+      <span class="tech-badge" role="listitem">React Native</span>
+      <span class="tech-badge" role="listitem">TypeScript</span>
+      <span class="tech-badge" role="listitem">Claude API (Vision)</span>
+      <span class="tech-badge" role="listitem">Supabase</span>
+      <span class="tech-badge" role="listitem">OpenStreetMap</span>
+      <span class="tech-badge" role="listitem">VoiceOver</span>
+      <span class="tech-badge" role="listitem">Zustand</span>
+      <span class="tech-badge" role="listitem">Expo Router</span>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <nav class="footer-links" aria-label="フッターナビゲーション">
+      <a href="https://github.com/Jada-Q/yomitomo">GitHub</a>
+      <a href="https://github.com/Jada-Q/yomitomo#readme">ドキュメント</a>
+    </nav>
+    <p class="footer-copy">
+      読み友 Yomitomo &copy; 2026 — Built with accessibility in mind
+    </p>
+  </footer>
+
+</body>
+</html>
