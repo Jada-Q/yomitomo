@@ -39,10 +39,8 @@ export async function speak(
 }
 
 export function stop() {
-  if (isSpeaking) {
-    Speech.stop();
-    isSpeaking = false;
-  }
+  Speech.stop();
+  isSpeaking = false;
 }
 
 export function getIsSpeaking() {

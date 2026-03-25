@@ -1,30 +1,42 @@
 import { create } from 'zustand';
-import { DocumentReadingResult } from '@/lib/ai/documentReader';
-
-interface DocumentEntry {
-  id: string;
-  result: DocumentReadingResult;
-  imageUri: string;
-  createdAt: number;
-}
+import type { DocumentSummary } from '@/lib/llm/localLlm';
 
 interface DocumentState {
-  documents: DocumentEntry[];
-  currentResult: DocumentReadingResult | null;
-  isLoading: boolean;
-  addDocument: (entry: DocumentEntry) => void;
-  setCurrentResult: (result: DocumentReadingResult | null) => void;
-  setLoading: (loading: boolean) => void;
+  // OCR result (Layer 1 — instant)
+  ocrText: string;
+  detectedLanguage: 'ja' | 'zh' | 'en' | 'unknown';
+
+  // LLM summary (Layer 2 — async)
+  summary: DocumentSummary | null;
+  isSummarizing: boolean;
+
+  // UI state
+  isCapturing: boolean;
+
+  setOcrResult: (text: string, language: 'ja' | 'zh' | 'en' | 'unknown') => void;
+  setSummary: (summary: DocumentSummary | null) => void;
+  setIsSummarizing: (v: boolean) => void;
+  setIsCapturing: (v: boolean) => void;
+  clear: () => void;
 }
 
 export const useDocumentStore = create<DocumentState>((set) => ({
-  documents: [],
-  currentResult: null,
-  isLoading: false,
-  addDocument: (entry) =>
-    set((state) => ({
-      documents: [entry, ...state.documents],
-    })),
-  setCurrentResult: (result) => set({ currentResult: result }),
-  setLoading: (loading) => set({ isLoading: loading }),
+  ocrText: '',
+  detectedLanguage: 'unknown',
+  summary: null,
+  isSummarizing: false,
+  isCapturing: false,
+
+  setOcrResult: (text, language) => set({ ocrText: text, detectedLanguage: language }),
+  setSummary: (summary) => set({ summary, isSummarizing: false }),
+  setIsSummarizing: (v) => set({ isSummarizing: v }),
+  setIsCapturing: (v) => set({ isCapturing: v }),
+  clear: () =>
+    set({
+      ocrText: '',
+      detectedLanguage: 'unknown',
+      summary: null,
+      isSummarizing: false,
+      isCapturing: false,
+    }),
 }));
