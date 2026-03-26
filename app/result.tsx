@@ -120,6 +120,17 @@ export default function ResultScreen() {
               </View>
             )}
 
+            {summary.deadline && (
+              <View style={styles.deadlineRow}>
+                <A11yText variant="body" style={styles.deadlineLabel}>
+                  期限
+                </A11yText>
+                <A11yText variant="body" style={styles.deadlineValue}>
+                  {summary.deadline}
+                </A11yText>
+              </View>
+            )}
+
             {summary.actionNeeded && (
               <View
                 style={styles.actionCard}
@@ -132,6 +143,17 @@ export default function ResultScreen() {
                 </A11yText>
                 <A11yText variant="body" style={styles.actionText}>
                   {summary.actionNeeded}
+                </A11yText>
+              </View>
+            )}
+
+            {summary.translation && (
+              <View style={styles.translationCard}>
+                <A11yText variant="body" style={styles.translationLabel}>
+                  English / 中文
+                </A11yText>
+                <A11yText variant="body" style={styles.translationText}>
+                  {summary.translation}
                 </A11yText>
               </View>
             )}
@@ -205,10 +227,15 @@ function buildSummaryText(summary: {
   summary: string;
   keyInfo: string[];
   actionNeeded: string | null;
+  deadline: string | null;
+  translation: string | null;
 }): string {
   let text = `${summary.documentType}。${summary.summary}`;
   if (summary.keyInfo.length > 0) {
     text += `。重要ポイント：${summary.keyInfo.join('。')}`;
+  }
+  if (summary.deadline) {
+    text += `。期限：${summary.deadline}`;
   }
   if (summary.actionNeeded) {
     text += `。必要なアクション：${summary.actionNeeded}`;
@@ -287,6 +314,40 @@ const styles = StyleSheet.create({
   },
   actionText: {
     lineHeight: 26,
+  },
+  deadlineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: A11Y.SPACING.sm,
+    backgroundColor: Colors.background,
+    borderRadius: A11Y.RADIUS.sm,
+    padding: A11Y.SPACING.md,
+  },
+  deadlineLabel: {
+    color: Colors.primary,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  deadlineValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  translationCard: {
+    backgroundColor: Colors.background,
+    borderRadius: A11Y.RADIUS.sm,
+    padding: A11Y.SPACING.md,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.primary,
+    gap: A11Y.SPACING.xs,
+  },
+  translationLabel: {
+    color: Colors.primary,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  translationText: {
+    lineHeight: 26,
+    color: Colors.textSecondary,
   },
   // Summarizing
   summarizingCard: {

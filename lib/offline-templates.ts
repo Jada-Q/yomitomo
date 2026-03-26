@@ -214,5 +214,7 @@ export function matchOfflineTemplate(ocrText: string): DocumentSummary | null {
     summary: bestMatch.buildSummary(ocrText),
     keyInfo: bestMatch.buildKeyInfo(ocrText),
     actionNeeded: bestMatch.buildAction(ocrText),
+    deadline: extractDate(ocrText),
+    translation: null, // Offline mode — translation requires AI
   };
 }

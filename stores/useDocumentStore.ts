@@ -6,6 +6,8 @@ export interface DocumentSummary {
   summary: string;
   keyInfo: string[];
   actionNeeded: string | null;
+  deadline: string | null;
+  translation: string | null;
 }
 
 interface DocumentState {
