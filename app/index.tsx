@@ -56,24 +56,30 @@ export default function CameraScreen() {
       if (Platform.OS === 'web') {
         // Web demo: use mock OCR + AI explanation
         const demoText = '東京電力エナジーパートナー ご請求書\nご請求金額 4,320円\nお支払期限 2026年3月30日';
-        speak('デモモードです。サンプルテキストを読み上げます。');
+        console.log('[Index] Web demo: setting OCR text');
+        speak('デモモードです。読み取り中です。');
         setOcrResult(demoText, 'ja');
-        setIsCapturing(false);
-        router.push('/result');
-
-        // Demo also triggers Layer 2
         setIsSummarizing(true);
-        const explain = async () => {
-          let summary = null;
-          if (isGeminiAvailable()) {
-            summary = await explainDocument(demoText);
-          }
-          if (!summary) {
-            summary = matchOfflineTemplate(demoText);
-          }
-          setSummary(summary);
-        };
-        explain();
+
+        // Wait for AI explanation BEFORE navigating
+        console.log('[Index] Starting Gemini explain...');
+        let summary = null;
+        console.log('[Index] isGeminiAvailable:', isGeminiAvailable());
+        if (isGeminiAvailable()) {
+          summary = await explainDocument(demoText);
+          console.log('[Index] Gemini result:', summary ? 'got summary' : 'null');
+        }
+        if (!summary) {
+          summary = matchOfflineTemplate(demoText);
+          console.log('[Index] Offline template result:', summary ? 'got summary' : 'null');
+        }
+        console.log('[Index] Setting summary in store:', summary ? JSON.stringify(summary).slice(0, 200) : 'null');
+        setSummary(summary);
+        setIsCapturing(false);
+
+        // Navigate AFTER data is ready
+        console.log('[Index] Navigating to /result (data ready)');
+        router.push('/result');
         return;
       }
 
@@ -107,37 +113,33 @@ export default function CameraScreen() {
       }
 
       setOcrResult(ocrResult.text, ocrResult.detectedLanguage);
-      setIsCapturing(false);
-      router.push('/result');
 
-      // Layer 2: AI explanation (background, non-blocking)
+      // Layer 2: AI explanation — wait before navigating
       setIsSummarizing(true);
-      const explain = async () => {
-        let summary = null;
+      let summary = null;
 
-        // Try Gemini API first
-        if (isGeminiAvailable()) {
-          summary = await explainDocument(ocrResult.text);
-        }
+      if (isGeminiAvailable()) {
+        summary = await explainDocument(ocrResult.text);
+      }
+      if (!summary) {
+        summary = matchOfflineTemplate(ocrResult.text);
+      }
 
-        // Fallback: offline keyword matching
-        if (!summary) {
-          summary = matchOfflineTemplate(ocrResult.text);
-        }
+      setSummary(summary);
+      setIsCapturing(false);
 
-        setSummary(summary);
+      // Save to history
+      addToHistory({
+        id: Date.now().toString(),
+        ocrText: ocrResult.text,
+        summary: summary?.summary ?? null,
+        documentType: summary?.documentType ?? null,
+        detectedLanguage: ocrResult.detectedLanguage,
+        createdAt: Date.now(),
+      });
 
-        // Save to history
-        addToHistory({
-          id: Date.now().toString(),
-          ocrText: ocrResult.text,
-          summary: summary?.summary ?? null,
-          documentType: summary?.documentType ?? null,
-          detectedLanguage: ocrResult.detectedLanguage,
-          createdAt: Date.now(),
-        });
-      };
-      explain();
+      // Navigate AFTER data is ready
+      router.push('/result');
     } catch (e) {
       console.error('Capture error:', e);
       AccessibilityInfo.announceForAccessibility('エラーが発生しました。');

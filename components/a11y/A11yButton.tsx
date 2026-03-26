@@ -29,8 +29,13 @@ export default function A11yButton({
   textStyle,
 }: A11yButtonProps) {
   const handlePress = () => {
+    console.log('[A11yButton] pressed:', label, 'disabled:', disabled);
     if (disabled) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch (e) {
+      console.warn('[A11yButton] Haptics failed:', e);
+    }
     onPress();
   };
 

@@ -30,6 +30,11 @@ export default function ResultScreen() {
     }
   }, []);
 
+  // Debug: log summary state
+  useEffect(() => {
+    console.log('[Result] summary updated:', summary ? JSON.stringify(summary).slice(0, 200) : 'null');
+  }, [summary]);
+
   // Auto-read summary when it arrives + announce for VoiceOver
   useEffect(() => {
     if (summary) {
@@ -43,14 +48,30 @@ export default function ResultScreen() {
   }, [summary]);
 
   const handleReadOcr = () => {
-    stop();
-    speak(ocrText, { rate: speechRate });
+    try {
+      console.log('[Result] handleReadOcr pressed, ocrText length:', ocrText?.length);
+      stop();
+      console.log('[Result] stop() ok, calling speak()');
+      speak(ocrText, { rate: speechRate });
+      console.log('[Result] speak() called ok');
+    } catch (e) {
+      console.error('[Result] handleReadOcr ERROR:', e);
+    }
   };
 
   const handleReadSummary = () => {
-    if (!summary) return;
-    stop();
-    speak(buildSummaryText(summary), { rate: speechRate });
+    try {
+      console.log('[Result] handleReadSummary pressed, summary:', !!summary);
+      if (!summary) return;
+      const text = buildSummaryText(summary);
+      console.log('[Result] buildSummaryText ok, length:', text.length);
+      stop();
+      console.log('[Result] stop() ok, calling speak()');
+      speak(text, { rate: speechRate });
+      console.log('[Result] speak() called ok');
+    } catch (e) {
+      console.error('[Result] handleReadSummary ERROR:', e);
+    }
   };
 
   const languageLabel =
