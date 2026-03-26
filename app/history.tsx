@@ -43,21 +43,22 @@ export default function HistoryScreen() {
   };
 
   const renderItem = ({ item }: { item: HistoryEntry }) => (
-    <View
-      style={styles.card}
-      accessible={true}
-      accessibilityLabel={`${item.documentType || '書類'}、${formatTime(item.createdAt)}`}
-      accessibilityHint="タップして読み上げます"
-    >
-      <View style={styles.cardHeader}>
-        <A11yText variant="body" style={styles.docType}>
-          {item.documentType || '書類'}
+    <View style={styles.card}>
+      <View
+        accessible={true}
+        accessibilityRole="text"
+        accessibilityLabel={`${item.documentType || '書類'}、${formatTime(item.createdAt)}。${item.summary || item.ocrText.slice(0, 100)}`}
+      >
+        <View style={styles.cardHeader}>
+          <A11yText variant="body" style={styles.docType}>
+            {item.documentType || '書類'}
+          </A11yText>
+          <A11yText variant="caption">{formatTime(item.createdAt)}</A11yText>
+        </View>
+        <A11yText variant="body" style={styles.preview}>
+          {item.summary || item.ocrText.slice(0, 100)}
         </A11yText>
-        <A11yText variant="caption">{formatTime(item.createdAt)}</A11yText>
       </View>
-      <A11yText variant="body" style={styles.preview}>
-        {item.summary || item.ocrText.slice(0, 100)}
-      </A11yText>
       <A11yButton
         label="読み上げる"
         hint="この書類の内容を読み上げます"

@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>読み友 Yomitomo — 無料オフライン文書リーダー</title>
-  <meta name="description" content="書類を撮影するだけで、即座にテキストを読み上げ。日本語・中国語・英語対応。完全無料・完全オフライン。視覚障害者のための文書リーダー。">
-  <meta property="og:title" content="読み友 Yomitomo">
-  <meta property="og:description" content="Free offline document reader for visually impaired — Japanese, Chinese, English">
+  <title>読み友 Yomitomo — 日本の生活書類AI解説アシスタント</title>
+  <meta name="description" content="年金通知、住民税、健康保険、公共料金。日本の生活書類を撮影するだけで、AIがわかりやすく解説。視覚障害者・在日外国人のための無料アプリ。">
+  <meta property="og:title" content="読み友 Yomitomo — 生活書類AI解説">
+  <meta property="og:description" content="Snap a photo of Japanese life documents → AI explains what it says, what to pay, and when. Free app for visually impaired people and foreigners in Japan.">
   <meta property="og:type" content="website">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -32,6 +32,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    /* Hero */
     .hero {
       min-height: 100vh;
       display: flex;
@@ -73,7 +74,7 @@
       font-size: 1.2rem;
       color: var(--text-secondary);
       margin-bottom: 1rem;
-      max-width: 600px;
+      max-width: 640px;
     }
 
     .hero-tags {
@@ -132,6 +133,7 @@
       padding-bottom: 2px;
     }
 
+    /* Sections */
     .section {
       padding: 5rem 2rem;
       max-width: var(--max-width);
@@ -159,6 +161,7 @@
       max-width: 700px;
     }
 
+    /* Problem cards */
     .problem-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -176,7 +179,27 @@
     .problem-card .number { font-size: 2.5rem; font-weight: 900; color: var(--danger); }
     .problem-card .label { color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.95rem; }
 
-    /* How it works */
+    /* Document types */
+    .doc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1.25rem;
+      margin-top: 2.5rem;
+    }
+
+    .doc-card {
+      background: var(--surface);
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .doc-card .doc-icon { font-size: 2.5rem; margin-bottom: 0.5rem; display: block; }
+    .doc-card .doc-name { font-weight: 700; font-size: 1rem; }
+    .doc-card .doc-desc { color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.25rem; }
+
+    /* Steps */
     .steps {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -202,6 +225,7 @@
     .step h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
     .step p { color: var(--text-secondary); font-size: 0.95rem; }
     .step-time { color: var(--success); font-weight: 700; font-size: 0.85rem; margin-top: 0.75rem; }
+    .step-note { color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem; font-style: italic; }
 
     /* Comparison */
     .compare-table {
@@ -265,6 +289,7 @@
       color: var(--text);
     }
 
+    /* Footer */
     .footer {
       text-align: center;
       padding: 3rem 2rem;
@@ -300,26 +325,26 @@
       <span class="hero-icon" aria-hidden="true">📖</span>
       <h1>読み友</h1>
       <p class="hero-subtitle">
-        書類を撮影 → 即座に読み上げ。<br>
-        完全無料・完全オフラインの文書リーダー。
+        年金通知、住民税、健康保険、公共料金。<br>
+        日本の生活書類を撮影 → AIがわかりやすく解説。
       </p>
 
       <div class="hero-tags" role="list" aria-label="特徴">
         <span class="hero-tag" role="listitem">無料</span>
-        <span class="hero-tag" role="listitem">オフライン対応</span>
+        <span class="hero-tag" role="listitem">AI解説</span>
+        <span class="hero-tag" role="listitem">VoiceOver対応</span>
         <span class="hero-tag" role="listitem">日本語</span>
-        <span class="hero-tag" role="listitem">中国語</span>
-        <span class="hero-tag" role="listitem">英語</span>
+        <span class="hero-tag" role="listitem">オフライン対応</span>
       </div>
 
       <div class="hero-stat" role="list" aria-label="主要な数値">
         <div class="stat-item" role="listitem">
-          <span class="stat-number">83%</span>
-          <span class="stat-label">が情報取得に困難</span>
-        </div>
-        <div class="stat-item" role="listitem">
           <span class="stat-number">31万人</span>
           <span class="stat-label">日本の視覚障害者</span>
+        </div>
+        <div class="stat-item" role="listitem">
+          <span class="stat-number">340万人</span>
+          <span class="stat-label">在日外国人</span>
         </div>
         <div class="stat-item" role="listitem">
           <span class="stat-number">$0</span>
@@ -339,10 +364,10 @@
   <!-- Problem -->
   <section class="section" aria-labelledby="problem-heading">
     <span class="section-label">課題</span>
-    <h2 id="problem-heading">「読めない」は、日常に潜む壁</h2>
+    <h2 id="problem-heading">「届いた書類が読めない」は想像以上に深刻</h2>
     <p>
-      請求書の金額、薬の飲み方、お店のメニュー。
-      目が見えないとき、紙に書かれた情報にアクセスする方法は驚くほど限られています。
+      年金の振込額、住民税の納付期限、保険証の更新日。
+      視覚障害者や在日外国人にとって、日本の行政書類は内容を理解すること自体が大きな壁です。
     </p>
 
     <div class="problem-grid">
@@ -352,11 +377,48 @@
       </div>
       <div class="problem-card">
         <div class="number">90%</div>
-        <div class="label">は点字が読めない。「点字があるから大丈夫」は誤解</div>
+        <div class="label">は点字が読めない。読み上げアプリがあっても、専門用語だらけの行政書類は理解できない</div>
       </div>
       <div class="problem-card">
-        <div class="number">0</div>
-        <div class="label">無料で日中英すべてに対応するオフラインOCRアプリは存在しない</div>
+        <div class="number">340万</div>
+        <div class="label">人の在日外国人が、日本語の行政書類を受け取っている</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Supported Documents -->
+  <section class="section" aria-labelledby="docs-heading">
+    <span class="section-label">対応書類</span>
+    <h2 id="docs-heading">日本の生活で届く5種類の書類に対応</h2>
+    <p>
+      OCRで読み取り、AIが内容を理解。書類の種類、金額、期限、必要なアクションをわかりやすく伝えます。
+    </p>
+
+    <div class="doc-grid" role="list" aria-label="対応する書類の種類">
+      <div class="doc-card" role="listitem">
+        <span class="doc-icon" aria-hidden="true">🏛️</span>
+        <div class="doc-name">年金通知</div>
+        <div class="doc-desc">国民年金・厚生年金</div>
+      </div>
+      <div class="doc-card" role="listitem">
+        <span class="doc-icon" aria-hidden="true">💰</span>
+        <div class="doc-name">住民税</div>
+        <div class="doc-desc">市民税・県民税通知</div>
+      </div>
+      <div class="doc-card" role="listitem">
+        <span class="doc-icon" aria-hidden="true">🏥</span>
+        <div class="doc-name">健康保険</div>
+        <div class="doc-desc">国保・社保・高額療養費</div>
+      </div>
+      <div class="doc-card" role="listitem">
+        <span class="doc-icon" aria-hidden="true">💡</span>
+        <div class="doc-name">公共料金</div>
+        <div class="doc-desc">電気・ガス・水道</div>
+      </div>
+      <div class="doc-card" role="listitem">
+        <span class="doc-icon" aria-hidden="true">🪪</span>
+        <div class="doc-name">マイナンバー</div>
+        <div class="doc-desc">通知カード・更新案内</div>
       </div>
     </div>
   </section>
@@ -364,7 +426,7 @@
   <!-- How it works -->
   <section class="section" id="how" aria-labelledby="how-heading">
     <span class="section-label">使い方</span>
-    <h2 id="how-heading">3ステップで、紙がことばになる</h2>
+    <h2 id="how-heading">3ステップで、書類がことばになる</h2>
 
     <div class="steps">
       <div class="step">
@@ -376,13 +438,14 @@
         <div class="step-number">2</div>
         <h3>テキスト読み上げ</h3>
         <p>ML Kit OCRが端末上で文字を認識し、即座に音声で読み上げます。</p>
-        <div class="step-time">0.5秒以内</div>
+        <div class="step-time">0.5秒以内・オフラインOK</div>
       </div>
       <div class="step">
         <div class="step-number">3</div>
-        <h3>AI要約（オプション）</h3>
-        <p>端末上のAI（Qwen 2.5）が書類の種類・金額・期限を要約して伝えます。</p>
-        <div class="step-time">ネットワーク不要</div>
+        <h3>AI解説</h3>
+        <p>Gemini AIが書類の種類・金額・期限・必要なアクションをわかりやすく解説します。</p>
+        <div class="step-time">約2秒</div>
+        <div class="step-note">オフライン時はキーワード解析で5種類の書類に対応</div>
       </div>
     </div>
   </section>
@@ -392,7 +455,7 @@
     <span class="section-label">比較</span>
     <h2 id="compare-heading">既存アプリとの違い</h2>
     <p>
-      日本語・中国語・英語すべてに対応し、完全無料・完全オフラインで動く文書リーダーは読み友だけです。
+      既存アプリは文字を読むだけ。読み友はAIが書類の内容を理解して、何をすべきか教えます。
     </p>
 
     <table class="compare-table" role="table" aria-label="競合比較">
@@ -401,8 +464,8 @@
           <th>アプリ</th>
           <th>無料</th>
           <th>日本語</th>
-          <th>中国語</th>
-          <th>オフライン</th>
+          <th>内容解説</th>
+          <th>アクセシブル</th>
         </tr>
       </thead>
       <tbody>
@@ -410,22 +473,29 @@
           <td>読み友</td>
           <td class="yes">Yes</td>
           <td class="yes">Yes</td>
-          <td class="yes">Yes</td>
-          <td class="yes">Yes</td>
+          <td class="yes">AI解説</td>
+          <td class="yes">VoiceOver対応</td>
         </tr>
         <tr>
           <td>Seeing AI</td>
           <td class="yes">Yes</td>
           <td class="yes">Yes</td>
-          <td class="no">No</td>
-          <td>一部</td>
+          <td class="no">OCRのみ</td>
+          <td class="yes">Yes</td>
         </tr>
         <tr>
           <td>Apple Live Text</td>
           <td class="yes">Yes</td>
           <td class="no">No</td>
+          <td class="no">OCRのみ</td>
+          <td>一部</td>
+        </tr>
+        <tr>
+          <td>Google Lens</td>
           <td class="yes">Yes</td>
           <td class="yes">Yes</td>
+          <td class="no">OCRのみ</td>
+          <td class="no">No</td>
         </tr>
         <tr>
           <td>Envision AI</td>
@@ -434,13 +504,6 @@
           <td class="yes">Yes</td>
           <td class="yes">Yes</td>
         </tr>
-        <tr>
-          <td>Be My Eyes</td>
-          <td class="yes">Yes</td>
-          <td>クラウド</td>
-          <td>クラウド</td>
-          <td class="no">No</td>
-        </tr>
       </tbody>
     </table>
   </section>
@@ -448,10 +511,10 @@
   <!-- Accessibility -->
   <section class="section" aria-labelledby="a11y-heading">
     <span class="section-label">アクセシビリティ</span>
-    <h2 id="a11y-heading">VoiceOver First で設計</h2>
+    <h2 id="a11y-heading">VoiceOver / TalkBack First で設計</h2>
     <p>
-      すべてのUI要素がVoiceOverに完全対応。
       画面を見なくても、すべての機能を音声で操作できます。
+      iOS (VoiceOver) と Android (TalkBack) の両方に対応。
     </p>
 
     <div class="a11y-principles">
@@ -460,16 +523,24 @@
         <span>Apple基準(44pt)を超える大きさ</span>
       </div>
       <div class="a11y-item">
-        <strong>WCAG AAA</strong>
-        <span>7:1以上のコントラスト比</span>
+        <strong>WCAG AAA 7:1+</strong>
+        <span>黒背景に金文字、最高レベルのコントラスト</span>
       </div>
       <div class="a11y-item">
-        <strong>音声ファースト</strong>
-        <span>VoiceOver ON/OFF 両方に最適化</span>
+        <strong>自動読み上げ</strong>
+        <span>結果が出た瞬間に音声でお知らせ</span>
       </div>
       <div class="a11y-item">
-        <strong>オフライン完全対応</strong>
-        <span>ネットワーク不要で全機能使用可能</span>
+        <strong>触覚フィードバック</strong>
+        <span>撮影時にバイブレーションで確認</span>
+      </div>
+      <div class="a11y-item">
+        <strong>オフラインOCR</strong>
+        <span>ネットなしでもテキスト読み取り可能</span>
+      </div>
+      <div class="a11y-item">
+        <strong>状態の音声通知</strong>
+        <span>処理中・完了・エラーをすべて音声で伝達</span>
       </div>
     </div>
   </section>
@@ -477,17 +548,17 @@
   <!-- Tech -->
   <section class="section" aria-labelledby="tech-heading">
     <span class="section-label">技術スタック</span>
-    <h2 id="tech-heading">すべて端末上で動く</h2>
+    <h2 id="tech-heading">モダンな技術で、確実に動く</h2>
 
     <div class="tech-grid" role="list">
       <span class="tech-badge" role="listitem">Expo SDK 55</span>
       <span class="tech-badge" role="listitem">React Native</span>
       <span class="tech-badge" role="listitem">TypeScript</span>
       <span class="tech-badge" role="listitem">ML Kit OCR</span>
-      <span class="tech-badge" role="listitem">llama.rn</span>
-      <span class="tech-badge" role="listitem">Qwen 2.5</span>
-      <span class="tech-badge" role="listitem">VoiceOver</span>
+      <span class="tech-badge" role="listitem">Gemini 3 Flash</span>
+      <span class="tech-badge" role="listitem">VoiceOver / TalkBack</span>
       <span class="tech-badge" role="listitem">Zustand</span>
+      <span class="tech-badge" role="listitem">AsyncStorage</span>
     </div>
   </section>
 
@@ -498,7 +569,7 @@
       <a href="https://github.com/Jada-Q/yomitomo#readme">ドキュメント</a>
     </nav>
     <p class="footer-copy">
-      読み友 Yomitomo &copy; 2026 Jada — Free, Offline, Accessible
+      読み友 Yomitomo &copy; 2026 Jada — Free. Accessible. Helpful.
     </p>
   </footer>
 

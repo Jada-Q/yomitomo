@@ -1,40 +1,46 @@
-import { Link, Stack } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { Stack } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
+
+import A11yScreen from '@/components/a11y/A11yScreen';
+import A11yText from '@/components/a11y/A11yText';
+import A11yButton from '@/components/a11y/A11yButton';
 import Colors from '@/constants/Colors';
+import A11Y from '@/constants/accessibility';
+import { useRouter } from 'expo-router';
 
 export default function NotFoundScreen() {
+  const router = useRouter();
+
   return (
     <>
       <Stack.Screen options={{ title: 'ページが見つかりません' }} />
-      <View style={styles.container}>
-        <Text style={styles.title}>このページは存在しません。</Text>
-        <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>ホームに戻る</Text>
-        </Link>
-      </View>
+      <A11yScreen
+        title="ページが見つかりません"
+        announceOnMount="このページは存在しません。ホームに戻るボタンがあります。"
+      >
+        <View style={styles.content}>
+          <A11yText variant="body" style={styles.desc}>
+            お探しのページは存在しません。
+          </A11yText>
+          <A11yButton
+            label="ホームに戻る"
+            hint="カメラ画面に戻ります"
+            onPress={() => router.replace('/')}
+          />
+        </View>
+      </A11yScreen>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  content: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
-    backgroundColor: Colors.background,
+    gap: A11Y.SPACING.xl,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.text,
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-  linkText: {
-    fontSize: 14,
-    color: Colors.primary,
+  desc: {
+    textAlign: 'center',
+    color: Colors.textSecondary,
   },
 });

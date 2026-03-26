@@ -16,9 +16,9 @@ import Colors from '@/constants/Colors';
 import A11Y from '@/constants/accessibility';
 import { speak, stop } from '@/lib/speech/tts';
 import { recognizeText } from '@/lib/ocr/mlkitOcr';
-import { summarizeDocument, isLlmReady } from '@/lib/llm/localLlm';
+import { explainDocument, isGeminiAvailable } from '@/lib/gemini';
+import { matchOfflineTemplate } from '@/lib/offline-templates';
 import { useDocumentStore } from '@/stores/useDocumentStore';
-import { useModelStore } from '@/stores/useModelStore';
 import { addToHistory } from '@/lib/storage/localHistory';
 
 export default function CameraScreen() {
@@ -33,7 +33,6 @@ export default function CameraScreen() {
     setIsSummarizing,
     clear,
   } = useDocumentStore();
-  const { isLoaded: isModelLoaded } = useModelStore();
 
   // Announce on first mount
   useEffect(() => {
@@ -55,19 +54,32 @@ export default function CameraScreen() {
       let imageUri: string;
 
       if (Platform.OS === 'web') {
-        // Web demo: use mock OCR
+        // Web demo: use mock OCR + AI explanation
+        const demoText = '東京電力エナジーパートナー ご請求書\nご請求金額 4,320円\nお支払期限 2026年3月30日';
         speak('デモモードです。サンプルテキストを読み上げます。');
-        setOcrResult(
-          '東京電力エナジーパートナー ご請求書\nご請求金額 4,320円\nお支払期限 2026年3月30日',
-          'ja',
-        );
+        setOcrResult(demoText, 'ja');
         setIsCapturing(false);
         router.push('/result');
+
+        // Demo also triggers Layer 2
+        setIsSummarizing(true);
+        const explain = async () => {
+          let summary = null;
+          if (isGeminiAvailable()) {
+            summary = await explainDocument(demoText);
+          }
+          if (!summary) {
+            summary = matchOfflineTemplate(demoText);
+          }
+          setSummary(summary);
+        };
+        explain();
         return;
       }
 
       // Capture photo
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      AccessibilityInfo.announceForAccessibility('撮影しました。読み取り中です。');
       speak('撮影しました。読み取り中です。');
 
       const photo = await cameraRef.current?.takePictureAsync({
@@ -83,7 +95,7 @@ export default function CameraScreen() {
 
       imageUri = photo.uri;
 
-      // Layer 1: OCR (instant)
+      // Layer 1: OCR (instant, on-device)
       const ocrResult = await recognizeText(imageUri);
 
       if (!ocrResult.text || ocrResult.text.trim().length === 0) {
@@ -96,35 +108,34 @@ export default function CameraScreen() {
       setIsCapturing(false);
       router.push('/result');
 
-      // Layer 2: LLM summary (background, if model loaded)
-      if (isLlmReady()) {
-        setIsSummarizing(true);
-        const lang = ocrResult.detectedLanguage === 'unknown' ? 'ja' : ocrResult.detectedLanguage;
-        const summary = await summarizeDocument(ocrResult.text, lang);
+      // Layer 2: AI explanation (background, non-blocking)
+      setIsSummarizing(true);
+      const explain = async () => {
+        let summary = null;
+
+        // Try Gemini API first
+        if (isGeminiAvailable()) {
+          summary = await explainDocument(ocrResult.text);
+        }
+
+        // Fallback: offline keyword matching
+        if (!summary) {
+          summary = matchOfflineTemplate(ocrResult.text);
+        }
+
         setSummary(summary);
 
         // Save to history
-        if (summary) {
-          addToHistory({
-            id: Date.now().toString(),
-            ocrText: ocrResult.text,
-            summary: summary.summary,
-            documentType: summary.documentType,
-            detectedLanguage: ocrResult.detectedLanguage,
-            createdAt: Date.now(),
-          });
-        }
-      } else {
-        // Save OCR-only to history
         addToHistory({
           id: Date.now().toString(),
           ocrText: ocrResult.text,
-          summary: null,
-          documentType: null,
+          summary: summary?.summary ?? null,
+          documentType: summary?.documentType ?? null,
           detectedLanguage: ocrResult.detectedLanguage,
           createdAt: Date.now(),
         });
-      }
+      };
+      explain();
     } catch (e) {
       console.error('Capture error:', e);
       speak('エラーが発生しました。もう一度お試しください。');
@@ -228,11 +239,6 @@ export default function CameraScreen() {
           <A11yText variant="title" style={styles.title}>
             読み友
           </A11yText>
-          {!isModelLoaded && (
-            <A11yText variant="caption" style={styles.modelBanner}>
-              設定からAI要約モデルをダウンロードできます
-            </A11yText>
-          )}
         </View>
 
         <View style={styles.instruction}>
@@ -248,6 +254,7 @@ export default function CameraScreen() {
             onPress={handleCapture}
             size="big"
             icon="📷"
+            disabled={isCapturing}
           />
           <View style={styles.secondaryButtons}>
             <A11yButton
@@ -299,13 +306,6 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
-  },
-  modelBanner: {
-    backgroundColor: Colors.surface,
-    paddingHorizontal: A11Y.SPACING.md,
-    paddingVertical: A11Y.SPACING.xs,
-    borderRadius: A11Y.RADIUS.sm,
-    overflow: 'hidden',
   },
   instruction: {
     alignItems: 'center',

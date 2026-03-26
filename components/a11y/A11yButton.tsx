@@ -10,6 +10,7 @@ interface A11yButtonProps {
   icon?: string;
   variant?: 'primary' | 'secondary' | 'danger';
   size?: 'normal' | 'big';
+  disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
@@ -21,10 +22,12 @@ export default function A11yButton({
   icon,
   variant = 'primary',
   size = 'normal',
+  disabled = false,
   style,
   textStyle,
 }: A11yButtonProps) {
   const handlePress = () => {
+    if (disabled) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onPress();
   };
@@ -45,13 +48,14 @@ export default function A11yButton({
       accessibilityLabel={label}
       accessibilityHint={hint}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
       onPress={handlePress}
       style={({ pressed }) => [
         styles.base,
         isBig && styles.big,
         {
           backgroundColor: bgColor,
-          opacity: pressed ? 0.7 : 1,
+          opacity: disabled ? 0.4 : pressed ? 0.7 : 1,
           borderColor: variant === 'secondary' ? Colors.border : 'transparent',
           borderWidth: variant === 'secondary' ? A11Y.BORDER_WIDTH : 0,
         },

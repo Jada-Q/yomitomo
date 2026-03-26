@@ -2,13 +2,14 @@
 
 # 読み友 Yomitomo
 
-**Free, offline document reader for visually impaired people**
+**AI-powered assistant for understanding Japanese life documents**
 
-無料・オフライン・日中英対応の文書リーダー
+日本の生活書類をAIが解説するアシスタント
 
 [![Expo](https://img.shields.io/badge/Expo-55-000020?logo=expo)](https://expo.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://typescriptlang.org)
 [![ML Kit](https://img.shields.io/badge/ML_Kit-OCR-4285F4?logo=google)](https://developers.google.com/ml-kit)
+[![Gemini](https://img.shields.io/badge/Gemini_3-Flash-4285F4?logo=google)](https://ai.google.dev)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 [How It Works](#how-it-works) · [Quick Start](#quick-start) · [Architecture](#architecture) · [Why](#why-yomitomo)
@@ -19,33 +20,32 @@
 
 ## Why Yomitomo?
 
-**No free iOS app supports Japanese + Chinese + English offline OCR for visually impaired users.**
+**No free app helps visually impaired people and foreigners in Japan understand administrative documents.**
 
-| App | Free | Japanese | Chinese | Offline |
-|-----|------|----------|---------|---------|
-| **Yomitomo** | **Yes** | **Yes** | **Yes** | **Yes** |
-| Seeing AI | Yes | Yes | No | Partial |
-| Apple Live Text | Yes | No | Yes | Yes |
-| Envision AI | $5/mo | Yes | Yes | Yes |
-| Be My Eyes | Yes | Cloud | Cloud | No |
+年金通知、住民税、健康保険、公共料金... Japanese life documents are complex even for native speakers. For visually impaired people and foreigners, they're nearly impossible.
 
-83% of Japan's 310,000 visually impaired people struggle with information access. 90% cannot read Braille. Yomitomo fills the gap.
+| App | Free | JP Documents | Explains Content | Accessible |
+|-----|------|-------------|-----------------|------------|
+| **Yomitomo** | **Yes** | **Yes** | **Yes (AI)** | **VoiceOver-first** |
+| Seeing AI | Yes | OCR only | No | Yes |
+| Apple Live Text | Yes | OCR only | No | Partial |
+| Google Lens | Yes | OCR only | No | No |
 
 ## How It Works
 
 ```
 1. Open app → camera ready
 2. Take photo of document
-3. < 0.5s → OCR reads text aloud (ML Kit, on-device)
-4. ~5s → AI summarizes: type, amount, deadline (Qwen 2.5, on-device)
+3. < 0.5s → ML Kit OCR reads text (on-device)
+4. ~2s → Gemini AI explains: type, amount, deadline, action needed
+5. Offline? → keyword matching for 5 common document types
 ```
-
-**Zero API calls. Zero servers. Zero cost.** Everything runs on your iPhone.
 
 ### Two-Layer Architecture
 
-- **Layer 1 (instant)**: ML Kit OCR → text extraction → TTS. Works offline, < 0.5s
-- **Layer 2 (optional)**: Qwen 2.5 1.5B local LLM → structured summary (document type, sender, key info, action needed)
+- **Layer 1 (instant, offline)**: ML Kit OCR → text extraction → TTS. On-device, < 0.5s
+- **Layer 2 (AI explanation)**: Gemini 3 Flash API → structured explanation (document type, key info, action needed)
+- **Fallback (offline)**: Keyword matching templates for 年金・住民税・健康保険・公共料金・マイナンバー
 
 ## Quick Start
 
@@ -53,6 +53,10 @@
 git clone https://github.com/Jada-Q/yomitomo.git
 cd yomitomo
 npm install
+
+# Set up Gemini API key (free tier)
+cp .env.example .env
+# Get key at https://aistudio.google.com/apikey
 
 # Web preview (demo mode)
 npm run web
@@ -67,14 +71,16 @@ eas build --profile development --platform ios
 yomitomo/
 ├── app/
 │   ├── index.tsx          # Camera (main screen)
-│   ├── result.tsx         # Two-stage result (OCR + AI summary)
+│   ├── result.tsx         # Two-stage result (OCR + AI explanation)
 │   ├── history.tsx        # Local reading history
-│   └── settings.tsx       # Speech rate, model download
+│   └── settings.tsx       # Speech rate
 ├── components/a11y/       # Accessibility primitives
 ├── lib/
 │   ├── ocr/mlkitOcr.ts   # ML Kit OCR (JP/CN/EN)
-│   ├── llm/               # Local LLM (llama.rn + Qwen 2.5)
-│   └── speech/tts.ts      # VoiceOver-aware TTS
+│   ├── gemini.ts          # Gemini 3 Flash API — document explanation
+│   ├── offline-templates.ts # Offline keyword matching (5 document types)
+│   ├── speech/tts.ts      # VoiceOver-aware TTS
+│   └── storage/localHistory.ts
 ├── stores/                # Zustand state
 └── web/                   # Landing page
 ```
@@ -85,7 +91,8 @@ yomitomo/
 |-------|-----------|------|
 | Framework | Expo SDK 55 + React Native | Free |
 | OCR | ML Kit (rn-mlkit-ocr) | Free, on-device |
-| AI Summary | Qwen 2.5 1.5B via llama.rn | Free, on-device |
+| AI Explanation | Gemini 3 Flash API | Free tier |
+| Offline Fallback | Keyword matching templates | Free |
 | Speech | expo-speech + VoiceOver | Free |
 | State | Zustand | Free |
 | Storage | AsyncStorage (local) | Free |
@@ -101,15 +108,12 @@ Built **VoiceOver-first** — every feature works without looking at the screen.
 | Contrast | WCAG AAA 7:1+ (black #000 + gold #FFD700) |
 | Focus management | Auto-focus title on screen transition |
 | Dual TTS | VoiceOver ON → system handles; OFF → expo-speech |
-| Offline-first | All features work without network |
+| Offline fallback | Core features work without network |
 
-## Research
+## Target Users
 
-| Source | Finding |
-|--------|---------|
-| [JVIF ICT Survey 2022](http://nichimou.org/) | 83% information access difficulty |
-| [JBICT.Net AT Survey 2023](https://jbict.net/) | 91% iPhone, 90% VoiceOver usage |
-| [MHLW Guide Helper Survey](https://www.mhlw.go.jp/) | 40% rarely leave home |
+- **視覚障害者** (visually impaired people in Japan) — 310,000 people, 83% struggle with information access
+- **在日外国人** (foreigners living in Japan) — 3.4M people who receive Japanese administrative documents
 
 ## License
 
@@ -119,8 +123,8 @@ MIT
 
 <div align="center">
 
-Free. Offline. Accessible.
+Free. Accessible. Helpful.
 
-無料・オフライン・アクセシブル。
+無料・アクセシブル・あなたの味方。
 
 </div>

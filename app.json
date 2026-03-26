@@ -49,12 +49,6 @@
           "ocrModels": ["japanese", "latin", "chinese"],
           "ocrUseBundled": true
         }
-      ],
-      [
-        "llama.rn",
-        {
-          "enableEntitlements": true
-        }
       ]
     ],
     "experiments": {

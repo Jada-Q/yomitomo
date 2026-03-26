@@ -1,12 +1,19 @@
 import { create } from 'zustand';
-import type { DocumentSummary } from '@/lib/llm/localLlm';
+
+export interface DocumentSummary {
+  documentType: string;
+  sender: string;
+  summary: string;
+  keyInfo: string[];
+  actionNeeded: string | null;
+}
 
 interface DocumentState {
-  // OCR result (Layer 1 — instant)
+  // OCR result (Layer 1 — instant, on-device)
   ocrText: string;
   detectedLanguage: 'ja' | 'zh' | 'en' | 'unknown';
 
-  // LLM summary (Layer 2 — async)
+  // AI explanation (Layer 2 — Gemini API)
   summary: DocumentSummary | null;
   isSummarizing: boolean;
 

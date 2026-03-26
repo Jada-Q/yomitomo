@@ -1,5 +1,11 @@
 import { useEffect } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  AccessibilityInfo,
+  Platform,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 
 import A11yScreen from '@/components/a11y/A11yScreen';
@@ -24,12 +30,15 @@ export default function ResultScreen() {
     }
   }, []);
 
-  // Auto-read summary when it arrives
+  // Auto-read summary when it arrives + announce for VoiceOver
   useEffect(() => {
     if (summary) {
-      stop();
       const summaryText = buildSummaryText(summary);
+      stop();
       speak(summaryText, { rate: speechRate });
+      AccessibilityInfo.announceForAccessibility(
+        'AI解説が完了しました。' + summaryText,
+      );
     }
   }, [summary]);
 
@@ -60,15 +69,26 @@ export default function ResultScreen() {
     >
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Language badge */}
-        <View style={styles.langBadge}>
+        <View
+          style={styles.langBadge}
+          accessible={true}
+          accessibilityLabel={`検出言語：${languageLabel}`}
+          accessibilityRole="text"
+        >
           <A11yText variant="caption">検出言語：{languageLabel}</A11yText>
         </View>
 
         {/* AI Summary (if available) */}
         {summary && (
-          <View style={styles.summaryCard}>
+          <View
+            style={styles.summaryCard}
+            accessible={true}
+            accessibilityLabel={`AI解説：${summary.documentType}。${summary.summary}`}
+            accessibilityRole="summary"
+            {...(Platform.OS === 'android' && { accessibilityLiveRegion: 'polite' as const })}
+          >
             <A11yText variant="body" style={styles.cardLabel}>
-              AI 要約
+              AI 解説
             </A11yText>
             <A11yText variant="title" style={styles.docType}>
               {summary.documentType}
@@ -101,7 +121,12 @@ export default function ResultScreen() {
             )}
 
             {summary.actionNeeded && (
-              <View style={styles.actionCard}>
+              <View
+                style={styles.actionCard}
+                accessible={true}
+                accessibilityLabel={`必要なアクション：${summary.actionNeeded}`}
+                accessibilityRole="alert"
+              >
                 <A11yText variant="body" style={styles.actionLabel}>
                   必要なアクション
                 </A11yText>
@@ -115,15 +140,26 @@ export default function ResultScreen() {
 
         {/* Summarizing indicator */}
         {isSummarizing && (
-          <View style={styles.summarizingCard}>
+          <View
+            style={styles.summarizingCard}
+            accessible={true}
+            accessibilityLabel="AI が書類を解析中です。しばらくお待ちください。"
+            accessibilityRole="progressbar"
+            {...(Platform.OS === 'android' && { accessibilityLiveRegion: 'polite' as const })}
+          >
             <A11yText variant="body" style={styles.summarizingText}>
-              AI が内容を分析中...
+              AI が書類を解析中...
             </A11yText>
           </View>
         )}
 
         {/* OCR Raw Text */}
-        <View style={styles.ocrCard}>
+        <View
+          style={styles.ocrCard}
+          accessible={true}
+          accessibilityLabel={`読み取ったテキスト：${ocrText || 'テキストが検出されませんでした。'}`}
+          accessibilityRole="text"
+        >
           <A11yText variant="body" style={styles.cardLabel}>
             読み取ったテキスト
           </A11yText>
@@ -142,8 +178,8 @@ export default function ResultScreen() {
           />
           {summary && (
             <A11yButton
-              label="要約を読み上げる"
-              hint="AIの要約を読み上げます"
+              label="解説を読み上げる"
+              hint="AIの解説を読み上げます"
               onPress={handleReadSummary}
             />
           )}
