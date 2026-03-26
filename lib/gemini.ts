@@ -1,6 +1,7 @@
 import type { DocumentSummary } from '@/stores/useDocumentStore';
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK === 'true';
 const PRIMARY_MODEL = 'gemini-3-flash-preview';
 const FALLBACK_MODEL = 'gemini-2.5-flash';
 
@@ -45,62 +46,57 @@ interface GeminiResponse {
 }
 
 /**
- * Check if Gemini API is available (API key configured)
+ * Mock response for testing without hitting the API.
+ * Activated by EXPO_PUBLIC_USE_MOCK=true or when API key is missing.
+ */
+function getMockSummary(): DocumentSummary {
+  return {
+    documentType: '電気代の請求書',
+    sender: '東京電力エナジーパートナー',
+    summary: 'お家で使った電気の代金を支払うためのお知らせです。4,320円を3月30日までに払う必要があります。',
+    keyInfo: ['請求金額：4,320円', '支払期限：2026年3月30日'],
+    actionNeeded: 'コンビニのレジまたは銀行で払込票を使って支払えます。口座振替の場合は対応不要です。',
+    deadline: '2026年3月30日',
+    translation: 'This is your electricity bill for 4,320 yen. Pay at a convenience store or bank by March 30. / 这是4,320日元的电费账单，请在3月30日之前到便利店或银行缴费。',
+  };
+}
+
+/**
+ * Check if Gemini API is available (API key configured and not in mock mode)
  */
 export function isGeminiAvailable(): boolean {
-  const available = !!GEMINI_API_KEY && GEMINI_API_KEY.length > 0;
-  if (!available) {
-    console.warn('[Gemini] API key not configured. Set EXPO_PUBLIC_GEMINI_API_KEY in .env');
-  }
-  return available;
+  if (USE_MOCK) return false;
+  return !!GEMINI_API_KEY && GEMINI_API_KEY.length > 0;
 }
 
 /**
  * Call Gemini API to explain a document from OCR text.
- * Tries primary model first, falls back to secondary model on failure.
+ * Returns mock data if USE_MOCK=true or API key is missing.
+ * On 429 (rate limit), returns null so caller can fall back to offline templates.
  */
-/**
- * Mock response for testing UI when API key is unavailable
- */
-function getMockSummary(): DocumentSummary {
-  console.log('[Gemini] Using MOCK summary (API key not available)');
-  return {
-    documentType: '電気料金請求書',
-    sender: '東京電力エナジーパートナー',
-    summary: '電気料金の請求書です。請求金額は4,320円で、2026年3月30日までにお支払いが必要です。',
-    keyInfo: ['請求金額：4,320円', '支払期限：2026年3月30日'],
-    actionNeeded: '2026年3月30日までにお支払いください',
-    deadline: '2026年3月30日',
-    translation: 'This is an electricity bill for 4,320 yen, due March 30, 2026. / 这是一张4,320日元的电费账单，截止日期为2026年3月30日。',
-  };
-}
-
 export async function explainDocument(
   ocrText: string,
-): Promise<DocumentSummary | null> {
+): Promise<{ summary: DocumentSummary | null; rateLimited?: boolean }> {
   if (!isGeminiAvailable()) {
-    console.warn('[Gemini] API key not available, returning mock summary for testing');
-    return getMockSummary();
+    return { summary: getMockSummary() };
   }
 
   const userPrompt = `以下はOCRで読み取った書類のテキストです。内容を解説してください。\n\n${ocrText}`;
 
-  console.log('[Gemini] Trying primary model:', PRIMARY_MODEL);
   const primary = await callGemini(PRIMARY_MODEL, userPrompt);
-  if (primary) return primary;
+  if (primary.summary) return primary;
+  if (primary.rateLimited) return primary;
 
-  console.log('[Gemini] Primary failed, trying fallback:', FALLBACK_MODEL);
   const fallback = await callGemini(FALLBACK_MODEL, userPrompt);
-  if (fallback) return fallback;
+  if (fallback.summary) return fallback;
 
-  console.error('[Gemini] Both models failed');
-  return null;
+  return fallback;
 }
 
 async function callGemini(
   model: string,
   userPrompt: string,
-): Promise<DocumentSummary | null> {
+): Promise<{ summary: DocumentSummary | null; rateLimited?: boolean }> {
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
 
@@ -118,33 +114,62 @@ async function callGemini(
       }),
     });
 
+    if (res.status === 429) {
+      console.warn(`[Gemini] Rate limited (429) for ${model}`);
+      return { summary: null, rateLimited: true };
+    }
+
     if (!res.ok) {
       const errorBody = await res.text();
       console.error(`[Gemini] HTTP ${res.status} for ${model}:`, errorBody);
-      return null;
+      return { summary: null };
     }
 
     const data: GeminiResponse = await res.json();
 
     if (data.error) {
       console.error(`[Gemini] API error for ${model}:`, data.error.message);
-      return null;
+      return { summary: null };
     }
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
       console.error(`[Gemini] Empty response for ${model}`);
-      return null;
+      return { summary: null };
     }
 
-    return parseGeminiResponse(text);
+    return { summary: parseGeminiResponse(text) };
   } catch (e) {
-    console.error(`[Gemini] Network error for model ${model}:`, e);
-    return null;
+    console.error(`[Gemini] Network error for ${model}:`, e);
+    return { summary: null };
   }
 }
 
+/**
+ * Parse Gemini response text into DocumentSummary.
+ * Handles markdown code blocks and malformed JSON gracefully.
+ */
 function parseGeminiResponse(text: string): DocumentSummary | null {
+  // Step 1: Strip markdown code block wrappers (```json ... ```)
+  let cleaned = text.trim();
+  cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '');
+
+  // Step 2: Try direct parse
+  const result = tryParseJson(cleaned);
+  if (result) return result;
+
+  // Step 3: If direct parse fails, extract JSON object with regex
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    const extracted = tryParseJson(jsonMatch[0]);
+    if (extracted) return extracted;
+  }
+
+  console.error('[Gemini] Failed to parse response:', text.slice(0, 200));
+  return null;
+}
+
+function tryParseJson(text: string): DocumentSummary | null {
   try {
     const parsed = JSON.parse(text);
     return {
@@ -158,8 +183,7 @@ function parseGeminiResponse(text: string): DocumentSummary | null {
       deadline: parsed.deadline ? String(parsed.deadline) : null,
       translation: parsed.translation ? String(parsed.translation) : null,
     };
-  } catch (e) {
-    console.error('[Gemini] Failed to parse response:', text, e);
+  } catch {
     return null;
   }
 }

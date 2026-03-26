@@ -63,7 +63,11 @@ export default function CameraScreen() {
         // Wait for AI explanation BEFORE navigating
         let summary = null;
         if (isGeminiAvailable()) {
-          summary = await explainDocument(demoText);
+          const result = await explainDocument(demoText);
+          summary = result.summary;
+          if (result.rateLimited) {
+            speak('本日のAI解析回数の上限に達しました。オフライン解析を使用します。');
+          }
         }
         if (!summary) {
           summary = matchOfflineTemplate(demoText);
@@ -110,7 +114,12 @@ export default function CameraScreen() {
       let summary = null;
 
       if (isGeminiAvailable()) {
-        summary = await explainDocument(ocrResult.text);
+        const result = await explainDocument(ocrResult.text);
+        summary = result.summary;
+        if (result.rateLimited) {
+          AccessibilityInfo.announceForAccessibility('本日のAI解析回数の上限に達しました。オフライン解析を使用します。');
+          speak('本日のAI解析回数の上限に達しました。オフライン解析を使用します。');
+        }
       }
       if (!summary) {
         summary = matchOfflineTemplate(ocrResult.text);
