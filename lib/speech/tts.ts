@@ -15,25 +15,20 @@ export function speak(
 
   stop();
   isSpeaking = true;
-  console.log('[TTS] Speaking:', text.slice(0, 80));
 
   if (Platform.OS === 'web') {
     // ── Web: use window.speechSynthesis directly ──
     if (typeof window === 'undefined' || !window.speechSynthesis) {
-      console.error('[TTS] window.speechSynthesis not available');
       isSpeaking = false;
       return;
     }
 
     const synth = window.speechSynthesis;
-    // cancel() already called by stop() above — do NOT call again here
-    // (double cancel causes "interrupted" error on the new utterance)
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ja-JP';
     utterance.rate = options?.rate ?? 0.9;
 
-    // Try to assign a Japanese voice
     const voices = synth.getVoices();
     const jaVoice = voices.find((v) => v.lang.startsWith('ja'));
     if (jaVoice) {
@@ -49,14 +44,21 @@ export function speak(
       options?.onDone?.();
     };
     utterance.onerror = (e) => {
-      // "interrupted" is expected when cancel() is called before a new speak —
-      // it fires on the OLD utterance being replaced. Not a real error.
-      if (e.error === 'interrupted') return;
-      console.error('[TTS] Web speech error:', e.error);
+      // "interrupted" and "canceled" are expected when cancel() is called
+      // before starting a new utterance. Not real errors.
+      if (e.error === 'interrupted' || e.error === 'canceled') {
+        console.debug('[TTS] Speech replaced (normal):', e.error);
+        return;
+      }
+      console.debug('[TTS] Web speech error:', e.error);
       isSpeaking = false;
     };
 
-    synth.speak(utterance);
+    // Chrome ignores speak() called immediately after cancel().
+    // A short delay ensures the cancel is fully processed first.
+    setTimeout(() => {
+      synth.speak(utterance);
+    }, 100);
   } else {
     // ── Native: use expo-speech ──
     try {
