@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -88,6 +88,7 @@ export default function CameraScreen() {
       });
 
       if (!photo?.uri) {
+        AccessibilityInfo.announceForAccessibility('撮影に失敗しました。');
         speak('撮影に失敗しました。もう一度お試しください。');
         setIsCapturing(false);
         return;
@@ -99,6 +100,7 @@ export default function CameraScreen() {
       const ocrResult = await recognizeText(imageUri);
 
       if (!ocrResult.text || ocrResult.text.trim().length === 0) {
+        AccessibilityInfo.announceForAccessibility('テキストが検出されませんでした。');
         speak('テキストが検出されませんでした。書類をもう少し近づけて、もう一度お試しください。');
         setIsCapturing(false);
         return;
@@ -138,6 +140,7 @@ export default function CameraScreen() {
       explain();
     } catch (e) {
       console.error('Capture error:', e);
+      AccessibilityInfo.announceForAccessibility('エラーが発生しました。');
       speak('エラーが発生しました。もう一度お試しください。');
       setIsCapturing(false);
     }
@@ -156,20 +159,25 @@ export default function CameraScreen() {
   if (!permission.granted) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.permissionContainer}>
+        <View
+          style={styles.permissionContainer}
+          accessible={true}
+          accessibilityRole="alert"
+          accessibilityLabel="カメラの許可が必要です。書類を撮影してテキストを読み上げるために、カメラへのアクセスを許可してください。"
+        >
           <A11yText variant="title" style={styles.permissionTitle}>
             カメラの許可が必要です
           </A11yText>
           <A11yText variant="body" style={styles.permissionDesc}>
             書類を撮影してテキストを読み上げるために、カメラへのアクセスを許可してください。
           </A11yText>
-          <A11yButton
-            label="カメラを許可する"
-            hint="カメラの使用許可を求めます"
-            onPress={requestPermission}
-            size="big"
-          />
         </View>
+        <A11yButton
+          label="カメラを許可する"
+          hint="カメラの使用許可を求めます"
+          onPress={requestPermission}
+          size="big"
+        />
       </SafeAreaView>
     );
   }
@@ -183,8 +191,12 @@ export default function CameraScreen() {
             読み友
           </A11yText>
         </View>
-        <View style={styles.demoContainer}>
-          <A11yText variant="heading" style={styles.demoIcon}>
+        <View
+          style={styles.demoContainer}
+          accessible={true}
+          accessibilityLabel="デモモード。実機ではカメラで書類を撮影できます。"
+        >
+          <A11yText variant="heading" style={styles.demoIcon} decorative>
             📄
           </A11yText>
           <A11yText variant="body" style={styles.demoText}>
@@ -202,7 +214,11 @@ export default function CameraScreen() {
             size="big"
             icon="📷"
           />
-          <View style={styles.secondaryButtons}>
+          <View
+            style={styles.secondaryButtons}
+            accessibilityRole="toolbar"
+            accessibilityLabel="追加操作"
+          >
             <A11yButton
               label="履歴"
               hint="過去の読み取り結果を表示します"
@@ -231,17 +247,23 @@ export default function CameraScreen() {
         style={styles.camera}
         facing="back"
         mode="picture"
+        accessible={false}
       />
 
       {/* Overlay controls */}
       <SafeAreaView style={styles.overlay}>
         <View style={styles.header}>
-          <A11yText variant="title" style={styles.title}>
+          <A11yText variant="title" style={styles.title} accessibilityLabel="読み友 カメラ画面">
             読み友
           </A11yText>
         </View>
 
-        <View style={styles.instruction}>
+        <View
+          style={styles.instruction}
+          accessible={true}
+          accessibilityLabel="書類をカメラに向けてください"
+          accessibilityRole="text"
+        >
           <A11yText variant="body" style={styles.instructionText}>
             書類をカメラに向けてください
           </A11yText>
@@ -256,7 +278,11 @@ export default function CameraScreen() {
             icon="📷"
             disabled={isCapturing}
           />
-          <View style={styles.secondaryButtons}>
+          <View
+            style={styles.secondaryButtons}
+            accessibilityRole="toolbar"
+            accessibilityLabel="追加操作"
+          >
             <A11yButton
               label="履歴"
               hint="過去の読み取り結果を表示します"

@@ -54,11 +54,12 @@ export default function LoadingOverlay({
       accessible={true}
       accessibilityLabel={message}
       accessibilityRole="progressbar"
+      importantForAccessibility="yes"
     >
       <Animated.View
         style={[styles.iconContainer, { transform: [{ scale: pulseAnim }] }]}
       >
-        <A11yText variant="heading" style={styles.icon}>
+        <A11yText variant="heading" style={styles.icon} decorative>
           📖
         </A11yText>
       </Animated.View>

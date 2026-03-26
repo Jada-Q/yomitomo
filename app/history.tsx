@@ -74,8 +74,12 @@ export default function HistoryScreen() {
       announceOnMount={`読み取り履歴です。${entries.length}件の記録があります。`}
     >
       {entries.length === 0 ? (
-        <View style={styles.empty}>
-          <A11yText variant="heading" style={styles.emptyIcon}>
+        <View
+          style={styles.empty}
+          accessible={true}
+          accessibilityLabel="まだ履歴がありません。書類を撮影すると、ここに記録が残ります。"
+        >
+          <A11yText variant="heading" style={styles.emptyIcon} decorative>
             📚
           </A11yText>
           <A11yText variant="title" style={styles.emptyTitle}>

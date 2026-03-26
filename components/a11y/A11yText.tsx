@@ -7,6 +7,8 @@ interface A11yTextProps {
   children: React.ReactNode;
   announce?: boolean;
   variant?: 'body' | 'title' | 'heading' | 'caption';
+  accessibilityLabel?: string;
+  decorative?: boolean;
   style?: TextStyle;
 }
 
@@ -14,6 +16,8 @@ export default function A11yText({
   children,
   announce = false,
   variant = 'body',
+  accessibilityLabel,
+  decorative = false,
   style,
 }: A11yTextProps) {
   useEffect(() => {
@@ -23,10 +27,23 @@ export default function A11yText({
     }
   }, [announce, children]);
 
+  if (decorative) {
+    return (
+      <Text
+        accessible={false}
+        importantForAccessibility="no"
+        style={[styles.base, styles[variant], style]}
+      >
+        {children}
+      </Text>
+    );
+  }
+
   return (
     <Text
       accessible={true}
       accessibilityRole="text"
+      accessibilityLabel={accessibilityLabel}
       style={[styles.base, styles[variant], style]}
     >
       {children}

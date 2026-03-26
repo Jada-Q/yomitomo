@@ -38,13 +38,18 @@ export default function SettingsScreen() {
           <A11yText variant="caption" style={styles.sectionDesc}>
             現在：{currentSpeedLabel}
           </A11yText>
-          <View style={styles.speedButtons}>
+          <View
+            style={styles.speedButtons}
+            accessibilityRole="radiogroup"
+            accessibilityLabel="読み上げ速度の選択"
+          >
             {SPEED_OPTIONS.map((option) => (
               <A11yButton
                 key={option.value}
                 label={option.label}
                 hint={`読み上げ速度を${option.label}に変更します`}
                 variant={speechRate === option.value ? 'primary' : 'secondary'}
+                selected={speechRate === option.value}
                 onPress={() => handleSpeedChange(option.value, option.label)}
                 style={styles.speedButton}
               />

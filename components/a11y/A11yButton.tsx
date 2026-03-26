@@ -11,6 +11,7 @@ interface A11yButtonProps {
   variant?: 'primary' | 'secondary' | 'danger';
   size?: 'normal' | 'big';
   disabled?: boolean;
+  selected?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
@@ -23,6 +24,7 @@ export default function A11yButton({
   variant = 'primary',
   size = 'normal',
   disabled = false,
+  selected,
   style,
   textStyle,
 }: A11yButtonProps) {
@@ -42,13 +44,16 @@ export default function A11yButton({
   const txtColor =
     variant === 'primary' ? Colors.background : Colors.text;
 
+  const state: { disabled: boolean; selected?: boolean } = { disabled };
+  if (selected !== undefined) state.selected = selected;
+
   return (
     <Pressable
       accessible={true}
       accessibilityLabel={label}
       accessibilityHint={hint}
       accessibilityRole="button"
-      accessibilityState={{ disabled }}
+      accessibilityState={state}
       onPress={handlePress}
       style={({ pressed }) => [
         styles.base,
@@ -63,7 +68,13 @@ export default function A11yButton({
       ]}
     >
       {icon && (
-        <Text style={[styles.icon, isBig && styles.iconBig]}>{icon}</Text>
+        <Text
+          style={[styles.icon, isBig && styles.iconBig]}
+          importantForAccessibility="no"
+          accessible={false}
+        >
+          {icon}
+        </Text>
       )}
       <Text
         style={[

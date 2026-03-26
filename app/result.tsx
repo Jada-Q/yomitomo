@@ -83,7 +83,7 @@ export default function ResultScreen() {
           <View
             style={styles.summaryCard}
             accessible={true}
-            accessibilityLabel={`AI解説：${summary.documentType}。${summary.summary}`}
+            accessibilityLabel={`AI解説：${buildSummaryText(summary)}`}
             accessibilityRole="summary"
             {...(Platform.OS === 'android' && { accessibilityLiveRegion: 'polite' as const })}
           >
