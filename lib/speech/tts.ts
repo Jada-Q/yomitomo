@@ -26,7 +26,8 @@ export function speak(
     }
 
     const synth = window.speechSynthesis;
-    synth.cancel();
+    // cancel() already called by stop() above — do NOT call again here
+    // (double cancel causes "interrupted" error on the new utterance)
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ja-JP';
@@ -37,27 +38,25 @@ export function speak(
     const jaVoice = voices.find((v) => v.lang.startsWith('ja'));
     if (jaVoice) {
       utterance.voice = jaVoice;
-      console.log('[TTS] Using voice:', jaVoice.name);
-    } else {
-      console.log(
-        '[TTS] No Japanese voice found, using default. Voices loaded:',
-        voices.length,
-      );
     }
 
-    utterance.onstart = () => console.log('[TTS] Web speech started');
+    utterance.onstart = () => {
+      console.log('[TTS] Web speech started');
+    };
     utterance.onend = () => {
       console.log('[TTS] Web speech ended');
       isSpeaking = false;
       options?.onDone?.();
     };
     utterance.onerror = (e) => {
+      // "interrupted" is expected when cancel() is called before a new speak —
+      // it fires on the OLD utterance being replaced. Not a real error.
+      if (e.error === 'interrupted') return;
       console.error('[TTS] Web speech error:', e.error);
       isSpeaking = false;
     };
 
     synth.speak(utterance);
-    console.log('[TTS] synth.speak() called, speaking:', synth.speaking);
   } else {
     // ── Native: use expo-speech ──
     try {
@@ -103,7 +102,7 @@ export function stop() {
       Speech.stop();
     }
   } catch (e) {
-    console.warn('[TTS] stop() error (ignored):', e);
+    // ignore — stop is best-effort
   }
   isSpeaking = false;
 }

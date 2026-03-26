@@ -4,31 +4,30 @@ const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const PRIMARY_MODEL = 'gemini-3-flash-preview';
 const FALLBACK_MODEL = 'gemini-2.5-flash';
 
-// Step 2: Log env var at module load time
-console.log('[Gemini] Module loaded. API key present:', !!GEMINI_API_KEY, 'length:', GEMINI_API_KEY?.length ?? 0);
+const SYSTEM_PROMPT = `あなたは日本で暮らす視覚障害者や外国人のための「書類解説アシスタント」です。
+利用者は書類を自分で読めません。OCRで読み取ったテキストを渡すので、「この書類は何か」「自分は何をすべきか」を教えてください。
 
-const SYSTEM_PROMPT = `あなたは日本の生活書類を解説するアシスタントです。
-視覚障害者や在日外国人に、書類の内容をわかりやすく説明します。
+■ 最重要ルール
+- OCRテキストをそのまま繰り返すな。利用者はすでに原文を音声で聞いている。
+- 「何の書類か」「なぜ届いたか」「何をすべきか」の3点を中心に、原文にない補足知識を加えて説明しろ。
+- 専門用語は使わず、小学生でもわかる言葉で書け。
 
-以下のJSON形式で必ず回答してください。JSON以外の文字を含めないでください。
-
+■ 出力フォーマット（JSON以外の文字を含めるな）
 {
-  "documentType": "書類の種類（例：年金通知、住民税通知、健康保険料通知、電気料金請求書、マイナンバー通知）",
-  "sender": "差出人（例：日本年金機構、○○市役所、不明）",
-  "summary": "書類の要点を1〜2文で簡潔に説明（視覚障害者が音声で聞くことを前提に、数字や日付は省略せず読み上げやすい形で）",
-  "keyInfo": ["重要な情報1", "重要な情報2"],
-  "actionNeeded": "必要なアクション（支払い、届出など。不要ならnull）",
-  "deadline": "期限日（例：2026年3月30日。期限がなければnull）",
-  "translation": "書類の要点を英語と中国語でも簡潔に説明（例：This is an electricity bill for 4,320 yen, due March 30. / 这是一张4,320日元的电费账单，截止日期为3月30日。）。日本語の書類の場合のみ。日本語以外の書類ならnull"
+  "documentType": "やさしい日本語で書類の種類（例：電気代の請求書、年金のお知らせ、マイナンバーカードの案内）",
+  "sender": "差出人（例：東京電力、日本年金機構、○○市役所、不明）",
+  "summary": "この書類が届いた理由と、利用者にとって何が重要かを1〜2文で説明。金額・日付は必ず含める。原文の繰り返しではなく、『あなたはこうすればよい』という視点で書く",
+  "keyInfo": ["利用者が知るべき重要ポイント。金額、期限、届け先など具体的に"],
+  "actionNeeded": "具体的な行動指示。支払い方法（コンビニ、銀行、口座振替）や届出先（市役所の窓口、電話番号）まで書く。何もしなくてよい場合は『口座振替の場合は対応不要です』のように明記。不要ならnull",
+  "deadline": "期限日（例：2026年3月30日）。期限がなければnull",
+  "translation": "英語と中国語で、外国人が知るべきポイントを1文ずつ。単なる翻訳ではなく、日本の制度に不慣れな人への補足を含める（例：You need to pay this at a convenience store (konbini) or bank by March 30. / 请在3月30日之前到便利店或银行支付。可以在7-11、全家等便利店缴费。）。日本語以外の書類ならnull"
 }
 
-注意事項：
+■ 注意事項
 - 金額は「4,320円」のように読みやすく表記
 - 日付は「2026年3月30日」のように年月日で表記
-- 専門用語は簡単な言葉で補足
 - 書類が日本語以外の場合も、回答は日本語で
-- OCRの読み取りミスがあっても、文脈から推測して正しい情報を提供
-- translationは在日外国人のために、英語と中国語で要点を1文ずつ提供`;
+- OCRの読み取りミスがあっても、文脈から推測して正しい情報を提供`;
 
 interface GeminiResponse {
   candidates?: Array<{
@@ -104,8 +103,6 @@ async function callGemini(
 ): Promise<DocumentSummary | null> {
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
-    console.log(`[Gemini] Request URL (without key): .../models/${model}:generateContent`);
-    console.log(`[Gemini] Prompt length: ${userPrompt.length} chars`);
 
     const res = await fetch(url, {
       method: 'POST',
@@ -121,32 +118,26 @@ async function callGemini(
       }),
     });
 
-    console.log(`[Gemini] Response status: ${res.status} ${res.statusText}`);
-
     if (!res.ok) {
       const errorBody = await res.text();
-      console.error(`[Gemini] HTTP ${res.status} for model ${model}:`, errorBody);
+      console.error(`[Gemini] HTTP ${res.status} for ${model}:`, errorBody);
       return null;
     }
 
     const data: GeminiResponse = await res.json();
-    console.log(`[Gemini] Response body:`, JSON.stringify(data).slice(0, 500));
 
     if (data.error) {
-      console.error(`[Gemini] API error for model ${model}:`, data.error.message);
+      console.error(`[Gemini] API error for ${model}:`, data.error.message);
       return null;
     }
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
-      console.error(`[Gemini] No text in response for model ${model}:`, JSON.stringify(data));
+      console.error(`[Gemini] Empty response for ${model}`);
       return null;
     }
 
-    console.log(`[Gemini] Raw AI text:`, text.slice(0, 300));
-    const parsed = parseGeminiResponse(text);
-    console.log(`[Gemini] Parsed result:`, parsed ? JSON.stringify(parsed).slice(0, 300) : 'null');
-    return parsed;
+    return parseGeminiResponse(text);
   } catch (e) {
     console.error(`[Gemini] Network error for model ${model}:`, e);
     return null;

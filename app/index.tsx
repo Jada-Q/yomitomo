@@ -56,29 +56,20 @@ export default function CameraScreen() {
       if (Platform.OS === 'web') {
         // Web demo: use mock OCR + AI explanation
         const demoText = '東京電力エナジーパートナー ご請求書\nご請求金額 4,320円\nお支払期限 2026年3月30日';
-        console.log('[Index] Web demo: setting OCR text');
         speak('デモモードです。読み取り中です。');
         setOcrResult(demoText, 'ja');
         setIsSummarizing(true);
 
         // Wait for AI explanation BEFORE navigating
-        console.log('[Index] Starting Gemini explain...');
         let summary = null;
-        console.log('[Index] isGeminiAvailable:', isGeminiAvailable());
         if (isGeminiAvailable()) {
           summary = await explainDocument(demoText);
-          console.log('[Index] Gemini result:', summary ? 'got summary' : 'null');
         }
         if (!summary) {
           summary = matchOfflineTemplate(demoText);
-          console.log('[Index] Offline template result:', summary ? 'got summary' : 'null');
         }
-        console.log('[Index] Setting summary in store:', summary ? JSON.stringify(summary).slice(0, 200) : 'null');
         setSummary(summary);
         setIsCapturing(false);
-
-        // Navigate AFTER data is ready
-        console.log('[Index] Navigating to /result (data ready)');
         router.push('/result');
         return;
       }
